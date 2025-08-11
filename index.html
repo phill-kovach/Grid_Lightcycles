@@ -154,6 +154,11 @@
             box-shadow: 0 6px 18px rgba(0, 192, 192, 0.7);
             transform: translateY(-2px);
         }
+        .game-button:active {
+            background-color: #009696;
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 192, 192, 0.5);
+        }
         .hidden { display: none !important; }
         .score-container {
             position: absolute;
@@ -334,6 +339,20 @@
             color: rgba(0, 192, 192, 0.3);
             text-shadow: 0 0 5px rgba(0, 192, 192, 0.5);
         }
+        #debug-message {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #000;
+            color: #fff;
+            font-size: 1rem;
+            padding: 8px;
+            box-sizing: border-box;
+            font-family: monospace;
+            z-index: 100;
+            display: block !important;
+        }
         
         /* === LAYOUT EDITOR === */
         .layout-editor-overlay {
@@ -478,6 +497,8 @@
             </div>
         </div>
     </div>
+    <!-- Debug Message Box -->
+    <div id="debug-message">Initializing...</div>
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -498,7 +519,7 @@
         const swipeLayout = document.getElementById('swipe-layout');
         const gameBoard = document.getElementById('game-board');
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas?.getContext('2d');
         const gameMenu = document.getElementById('gameMenu');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const gameOverMessage = document.getElementById('gameOverMessage');
@@ -508,23 +529,9 @@
         const pausedScreen = document.getElementById('pausedScreen');
         const pauseButton = document.getElementById('pauseButton');
         const boostMeterBar = document.getElementById('boost-meter-bar');
-
+        const debugMessage = document.getElementById('debug-message');
+        
         // Layout Editor Elements
         const layoutEditorOverlay = document.getElementById('layout-editor-overlay');
         const openLayoutEditorBtn = document.getElementById('open-layout-editor-btn');
-        const saveLayoutBtn = document.getElementById('save-layout-btn');
-        const resetLayoutBtn = document.getElementById('reset-layout-btn');
-        const dpadContainer = document.getElementById('dpad-container');
-        const actionControlsContainer = document.getElementById('action-controls-container');
-        const actionButtonsLayout = document.getElementById('action-buttons-layout');
-        
-        // --- GAME CONSTANTS & VARIABLES ---
-        const gridSize = 10;
-        const baseTickInterval = 60;
-        const userTrailColor = '#00c0c0';
-        const mcpTrailColor = '#ff6600';
-        const SWIPE_THRESHOLD = 30;
-        let gameLoopId;
-        let isGameOver = true;
-        let gamePaused = false;
-    
+        cons
