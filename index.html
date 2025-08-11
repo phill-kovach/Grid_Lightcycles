@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Lightcycles</title>
-    <!-- NEW: PWA Manifest link -->
+    <!-- PWA Manifest link -->
     <link rel="manifest" href="manifest.json">
-    <!-- NEW: Meta tags for iOS to enable PWA support -->
+    <!-- Meta tags for iOS to enable PWA support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,10 +29,10 @@
             user-select: none;
             -webkit-user-select: none;
         }
+        /* NEW: Removed 100vh here to be set by JS */
         .game-container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
             width: 100vw;
             position: relative;
             background-color: #1a1a1a;
@@ -49,7 +49,7 @@
             position: relative;
         }
         .full-screen-game {
-            height: 100vh;
+            height: 100%; /* Changed from 100vh */
             width: 100vw;
             padding: 0;
         }
@@ -217,7 +217,7 @@
             align-items: center;
             cursor: pointer;
             transition: all 0.1s ease;
-            font-size: 40px; /* NEW: Default button font size */
+            font-size: 40px;
         }
         .direction-buttons-layout button.up { grid-area: up; }
         .direction-buttons-layout button.down { grid-area: down; }
@@ -256,13 +256,13 @@
             align-items: center;
             cursor: pointer;
             text-transform: uppercase;
-            font-size: 1rem; /* NEW: Default button font size */
+            font-size: 1rem;
             font-weight: 700;
             transition: all 0.1s ease;
             line-height: 1;
         }
         .action-btn span {
-            font-size: 2.5rem; /* NEW: Default icon size */
+            font-size: 2.5rem;
             margin-bottom: 5px;
         }
         .action-btn:active {
@@ -285,13 +285,13 @@
             align-items: center;
             cursor: pointer;
             text-transform: uppercase;
-            font-size: 1rem; /* NEW: Default button font size */
+            font-size: 1rem;
             font-weight: 700;
             transition: all 0.1s ease;
             line-height: 1;
         }
         .pause-action-btn span {
-            font-size: 3rem; /* NEW: Default icon size */
+            font-size: 3rem;
         }
         .pause-action-btn:active {
             background-color: #ff8c42;
@@ -302,7 +302,7 @@
         /* Phosphor Icons */
         .ph {
             font-family: 'phosphor';
-            font-size: inherit; /* NEW: Icons inherit font size from parent button */
+            font-size: inherit;
             line-height: 1;
         }
         #boost-meter-container {
@@ -420,7 +420,7 @@
                     <button id="controls-keyboard" class="game-button">Keyboard</button>
                     <button id="controls-buttons" class="game-button">Buttons</button>
                     <button id="controls-swipe" class="game-button">Swipe</button>
-                    <!-- NEW: Button to open the layout editor -->
+                    <!-- Button to open the layout editor -->
                     <button id="open-layout-editor-btn" class="game-button">Edit Layout</button>
                 </div>
             </div>
@@ -470,7 +470,7 @@
                 <div id="swipe-pad"><p>SWIPE ANYWHERE HERE</p></div>
             </div>
         </div>
-        <!-- NEW: Layout Editor Overlay -->
+        <!-- Layout Editor Overlay -->
         <div id="layout-editor-overlay" class="layout-editor-overlay hidden">
             <h2>Drag and drop or resize to customize your layout</h2>
             <div class="layout-editor-controls">
@@ -510,7 +510,7 @@
         const pauseButton = document.getElementById('pauseButton');
         const boostMeterBar = document.getElementById('boost-meter-bar');
 
-        // NEW: Layout Editor Elements
+        // Layout Editor Elements
         const layoutEditorOverlay = document.getElementById('layout-editor-overlay');
         const openLayoutEditorBtn = document.getElementById('open-layout-editor-btn');
         const saveLayoutBtn = document.getElementById('save-layout-btn');
@@ -520,752 +520,8 @@
         const actionButtonsLayout = document.getElementById('action-buttons-layout');
         
         // --- GAME CONSTANTS & VARIABLES ---
-        const gridSize = 8; // NEW: Reduced grid size for smaller bikes
-        const baseTickInterval = 65; // NEW: Increased interval for slower game speed
+        const gridSize = 10; // NEW: Increased grid size for larger bikes
+        const baseTickInterval = 60; // NEW: Decreased interval for slightly faster game speed
         const userTrailColor = '#00c0c0';
         const mcpTrailColor = '#ff6600';
-        const SWIPE_THRESHOLD = 30;
-        const BOOST_HOLD_DURATION = 250;
-        let gameLoopId;
-        let isGameOver = true;
-        let gamePaused = false;
-        let userScore = 0, mcpScore = 0;
-        let lastControlScheme = 'keyboard';
-        let ticksSinceLastMove = 0;
-        let user, mcp, userTrail, mcpTrail, allTrails;
-
-        // --- BOOST/BRAKE VARIABLES ---
-        let boostFuel = 100;
-        const BOOST_COST = 1.5;
-        const FUEL_REGEN = 0.25;
-        let isBoosting = false;
-        let isBraking = false;
-        
-        // === LAYOUT EDITOR VARIABLES ===
-        let isEditingLayout = false;
-        let activeDraggable = null;
-        let isResizing = false;
-        let initialMousePos = { x: 0, y: 0 };
-        let initialElementPos = { x: 0, y: 0 };
-        let initialElementSize = { width: 0, height: 0 };
-        const defaultLayoutPositions = {
-            dpad: { top: 'calc(50% + 50px)', left: '2rem', width: '250px', height: '250px', transform: 'translateY(-50%)' },
-            action: { top: 'calc(50% + 50px)', right: '2rem', width: '250px', height: '250px', transform: 'translateY(-50%)' }
-        };
-        
-        // --- UTILITY FUNCTIONS ---
-        function updateElementVisibility(element, isVisible) {
-            if (element) {
-                if (isVisible) {
-                    element.classList.remove('hidden');
-                } else {
-                    element.classList.add('hidden');
-                }
-            }
-        }
-
-        function resizeCanvas() {
-            const parentWidth = gameBoard.clientWidth;
-            const parentHeight = gameBoard.clientHeight;
-            let squareSize = Math.min(parentWidth, parentHeight) - 4; // -4 for border
-            const newSize = Math.floor(squareSize / gridSize) * gridSize;
-            canvas.width = newSize;
-            canvas.height = newSize;
-            if (!isGameOver) drawGame();
-        }
-
-        function displayScores() {
-            document.getElementById('userScore').textContent = userScore;
-            document.getElementById('mcpScore').textContent = mcpScore;
-        }
-
-        // --- FIREBASE FUNCTIONS ---
-        async function setupFirebaseAndLoadScores() {
-            try {
-                if (Object.keys(firebaseConfig).length === 0) {
-                    console.warn("Firebase config not found. Game state will not be saved.");
-                    return;
-                }
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser?.uid;
-                const scoresDocRef = doc(db, `artifacts/${appId}/users/${userId}/lightcyclesGame`, "scores");
-                onSnapshot(scoresDocRef, (docSnapshot) => {
-                    if (docSnapshot.exists() && docSnapshot.data()) {
-                        const data = docSnapshot.data();
-                        userScore = data.userScore || 0;
-                        mcpScore = data.mcpScore || 0;
-                        displayScores();
-                    }
-                }, (error) => {
-                    console.error("Error listening to score updates:", error);
-                });
-                const docSnap = await getDoc(scoresDocRef);
-                if (!docSnap.exists()) {
-                    await setDoc(scoresDocRef, { userScore: 0, mcpScore: 0 });
-                }
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-            }
-        }
-
-        async function saveGameState() {
-            if (!userId || !db) return;
-            try {
-                const docRef = doc(db, `artifacts/${appId}/users/${userId}/lightcyclesGame`, "scores");
-                await setDoc(docRef, { userScore, mcpScore });
-            } catch (error) {
-                console.error("Error saving game state:", error);
-            }
-        }
-
-        // --- GAME LOGIC ---
-        function startGame(controlScheme) {
-            lastControlScheme = controlScheme;
-            isGameOver = true;
-            updateElementVisibility(gameMenu, false);
-            updateElementVisibility(gameOverScreen, false);
-            updateElementVisibility(pausedScreen, false);
-            
-            if (controlScheme === 'keyboard') {
-                gameDisplaySection.classList.add('full-screen-game');
-                updateElementVisibility(controlsContainer, false);
-            } else {
-                gameDisplaySection.classList.remove('full-screen-game');
-                updateElementVisibility(controlsContainer, true);
-                updateElementVisibility(buttonsLayout, controlScheme === 'buttons');
-                updateElementVisibility(swipeLayout, controlScheme === 'swipe');
-            }
-            
-            if (controlScheme === 'buttons') {
-                applySavedLayout();
-            }
-
-            resizeCanvas();
-            startNewCountdown();
-        }
-
-        function startNewCountdown() {
-            updateElementVisibility(countdownOverlay, true);
-            countdownDisplay.textContent = "";
-            setTimeout(() => { countdownDisplay.textContent = "Ready?"; }, 1000);
-            setTimeout(() => { countdownDisplay.textContent = "Game On!"; }, 2000);
-            setTimeout(() => {
-                updateElementVisibility(countdownOverlay, false);
-                initRound();
-            }, 3000);
-        }
-
-        function initRound() {
-            isGameOver = false;
-            gamePaused = false;
-            boostFuel = 100;
-            isBoosting = false;
-            isBraking = false;
-            ticksSinceLastMove = 0;
-            if (pauseButton) {
-                pauseButton.textContent = "PAUSE";
-            }
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const midY = Math.floor(canvas.height / 2 / gridSize) * gridSize;
-            user = { x: gridSize * 5, y: midY, dx: gridSize, dy: 0 };
-            mcp = { x: canvas.width - gridSize * 6, y: midY, dx: -gridSize, dy: 0 };
-            userTrail = [{...user}];
-            mcpTrail = [{...mcp}];
-            allTrails = new Set([`${user.x},${user.y}`, `${mcp.x},${mcp.y}`]);
-            if (gameLoopId) clearInterval(gameLoopId);
-            gameLoopId = setInterval(gameTick, baseTickInterval);
-            drawGame();
-        }
-
-        function gameTick() {
-            if (gamePaused || isGameOver) return;
-            updateGame();
-            drawGame();
-        }
-
-        function manageBoostFuel() {
-            if (isBoosting && boostFuel > 0) {
-                boostFuel = Math.max(0, boostFuel - BOOST_COST);
-            } else if (boostFuel < 100) {
-                boostFuel = Math.min(100, boostFuel + FUEL_REGEN);
-            }
-            boostMeterBar.style.width = `${boostFuel}%`;
-        }
-
-        function updateGame() {
-            manageBoostFuel();
-            let shouldMoveUser = true;
-            if (isBraking) {
-                ticksSinceLastMove++;
-                if (ticksSinceLastMove % 2 !== 0) {
-                    shouldMoveUser = false;
-                }
-            } else {
-                ticksSinceLastMove = 0;
-            }
-            let userSpeedMultiplier = 1;
-            if (isBoosting && boostFuel > 0) {
-                userSpeedMultiplier = 2;
-            }
-            if (shouldMoveUser) {
-                for (let i = 0; i < userSpeedMultiplier; i++) {
-                    let nextX = user.x + user.dx;
-                    let nextY = user.y + user.dy;
-                    if (checkCollision(nextX, nextY)) {
-                        endRound("mcp");
-                        return;
-                    }
-                    user.x = nextX;
-                    user.y = nextY;
-                    userTrail.push({ ...user });
-                    allTrails.add(`${user.x},${user.y}`);
-                }
-            }
-            updateMcpDirection();
-            let mcpNextX = mcp.x + mcp.dx;
-            let mcpNextY = mcp.y + mcp.dy;
-            if (checkCollision(mcpNextX, mcpNextY)) {
-                endRound("user");
-                return;
-            }
-            mcp.x = mcpNextX;
-            mcp.y = mcpNextY;
-            mcpTrail.push({ ...mcp });
-            allTrails.add(`${mcp.x},${mcp.y}`);
-        }
-
-        function checkCollision(x, y) {
-            if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
-                return true;
-            }
-            return allTrails.has(`${x},${y}`);
-        }
-
-        function updateMcpDirection() {
-            const nextX = mcp.x + mcp.dx;
-            const nextY = mcp.y + mcp.dy;
-            if (!checkCollision(nextX, nextY)) {
-                return;
-            }
-            const directions = [
-                { dx: 0, dy: -gridSize }, // Up
-                { dx: 0, dy: gridSize },  // Down
-                { dx: -gridSize, dy: 0 }, // Left
-                { dx: gridSize, dy: 0 }   // Right
-            ];
-            const safeMoves = directions.filter(d =>
-                !(d.dx === -mcp.dx && d.dy === -mcp.dy) &&
-                !checkCollision(mcp.x + d.dx, mcp.y + d.dy)
-            );
-            if (safeMoves.length === 0) {
-                return;
-            }
-            let bestMove = safeMoves[0];
-            let maxScore = -Infinity;
-            for (const move of safeMoves) {
-                const newMcpX = mcp.x + move.dx;
-                const newMcpY = mcp.y + move.dy;
-                const distanceToUser = Math.sqrt(Math.pow(newMcpX - user.x, 2) + Math.pow(newMcpY - user.y, 2));
-                const score = (1000 / distanceToUser) + (Math.random() * 20);
-                if (score > maxScore) {
-                    maxScore = score;
-                    bestMove = move;
-                }
-            }
-            mcp.dx = bestMove.dx;
-            mcp.dy = bestMove.dy;
-        }
-
-        function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.shadowBlur = 15;
-            if (isBoosting) {
-                canvas.style.borderColor = '#00ff00';
-                canvas.style.boxShadow = '0 0 20px 5px #00ff00';
-            } else if (isBraking) {
-                canvas.style.borderColor = '#ff0000';
-                canvas.style.boxShadow = '0 0 20px 5px #ff0000';
-            } else {
-                canvas.style.borderColor = '#00c0c0';
-                canvas.style.boxShadow = '0 0 20px 5px #00c0c0';
-            }
-            ctx.shadowColor = userTrailColor;
-            ctx.fillStyle = userTrailColor;
-            userTrail.forEach(p => ctx.fillRect(p.x, p.y, gridSize, gridSize));
-            ctx.shadowColor = mcpTrailColor;
-            ctx.fillStyle = mcpTrailColor;
-            mcpTrail.forEach(p => ctx.fillRect(p.x, p.y, gridSize, gridSize));
-            ctx.shadowBlur = 0;
-        }
-
-        function endRound(winner) {
-            clearInterval(gameLoopId);
-            isGameOver = true;
-
-            gameOverMessage.textContent = "<<END OF LINE>>";
-
-            if (winner === "user") { userScore++; winnerMessage.textContent = "USER WINS"; winnerMessage.style.color = userTrailColor; }
-            else if (winner === "mcp") { mcpScore++; winnerMessage.textContent = "MCP WINS"; winnerMessage.style.color = mcpTrailColor; }
-            else { winnerMessage.textContent = "BOTH ELIMINATED"; winnerMessage.style.color = '#ffffff'; }
-            displayScores();
-            saveGameState();
-            updateElementVisibility(gameOverScreen, true);
-        }
-
-        function togglePause() {
-            if(isGameOver || !pauseButton) return;
-            gamePaused = !gamePaused;
-            pauseButton.textContent = gamePaused ? "RESUME" : "PAUSE";
-            if (gamePaused) {
-                clearInterval(gameLoopId);
-                updateElementVisibility(pausedScreen, true);
-            } else {
-                gameLoopId = setInterval(gameTick, baseTickInterval);
-                updateElementVisibility(pausedScreen, false);
-            }
-        }
-
-        // --- INPUT HANDLING ---
-        function handleKeyDown(e) {
-            if (isGameOver) return;
-            if (e.key.toLowerCase() === 'p') {
-                togglePause();
-                return;
-            }
-            if (gamePaused || lastControlScheme !== 'keyboard') return;
-            switch (e.key) {
-                case "ArrowUp": case "w": if (user.dy === 0) { user.dx = 0; user.dy = -gridSize; } break;
-                case "ArrowDown": case "s": if (user.dy === 0) { user.dx = 0; user.dy = gridSize; } break;
-                case "ArrowLeft": case "a": if (user.dx === 0) { user.dx = -gridSize; user.dy = 0; } break;
-                case "ArrowRight": case "d": if (user.dx === 0) { user.dx = gridSize; user.dy = 0; } break;
-                case " ": isBoosting = true; break;
-                case "Control": e.preventDefault(); isBraking = true; break;
-            }
-        }
-        
-        function handleKeyUp(e) {
-            if(lastControlScheme !== 'keyboard') return;
-            switch(e.key) {
-                case " ": isBoosting = false; break;
-                case "Control": isBraking = false; break;
-            }
-        }
-
-        function handleDirectionButton(dir) {
-            if (isGameOver || gamePaused || lastControlScheme !== 'buttons') return;
-            switch (dir) {
-                case 'up': if (user.dy === 0) { user.dx = 0; user.dy = -gridSize; } break;
-                case 'down': if (user.dy === 0) { user.dx = 0; user.dy = gridSize; } break;
-                case 'left': if (user.dx === 0) { user.dx = -gridSize; user.dy = 0; } break;
-                case 'right': if (user.dx === 0) { user.dx = gridSize; user.dy = 0; } break;
-            }
-        }
-
-        function handleActionButton(action, isPressed) {
-            if (isGameOver || gamePaused || lastControlScheme !== 'buttons') return;
-            if (action === 'boost') isBoosting = isPressed;
-            if (action === 'brake') isBraking = isPressed;
-        }
-
-        function handleSwipeStart(e) {
-            if (isGameOver || gamePaused) return;
-            const touch = e.touches[0];
-            touchStartCoordinates = { x: touch.clientX, y: touch.clientY };
-        }
-
-        function handleSwipeEnd(e) {
-            if (isGameOver || gamePaused) return;
-            const touchEnd = e.changedTouches[0];
-            const dX = touchEnd.clientX - touchStartCoordinates.x;
-            const dY = touchEnd.clientY - touchStartCoordinates.y;
-            
-            if (Math.abs(dX) > Math.abs(dY) && Math.abs(dX) > SWIPE_THRESHOLD) {
-                handleDirectionButton(dX > 0 ? 'right' : 'left');
-            } else if (Math.abs(dY) > SWIPE_THRESHOLD) {
-                handleDirectionButton(dY > 0 ? 'down' : 'up');
-            }
-        }
-        
-        function handleSwipeCancel(e) {
-            // Nothing to do here for a simple swipe.
-        }
-
-        // === LAYOUT EDITOR FUNCTIONS ===
-        function openLayoutEditor() {
-            if (lastControlScheme !== 'buttons') {
-                const editorMessageBox = document.createElement('div');
-                editorMessageBox.className = 'game-overlay';
-                editorMessageBox.innerHTML = `
-                    <div class="game-overlay-content">
-                        <h2>Layout Editing</h2>
-                        <p>Layout editing is only available for the 'Buttons' control scheme.</p>
-                        <button class="game-button" onclick="this.parentNode.parentNode.remove()">OK</button>
-                    </div>
-                `;
-                document.body.appendChild(editorMessageBox);
-                return;
-            }
-            isEditingLayout = true;
-            updateElementVisibility(gameMenu, false);
-            updateElementVisibility(controlsContainer, true);
-            updateElementVisibility(buttonsLayout, true);
-            updateElementVisibility(layoutEditorOverlay, true);
-
-            buttonsLayout.classList.add('layout-editor-mode');
-            
-            applySavedLayout();
-        }
-
-        function saveLayout() {
-            const dpadPos = {
-                top: dpadContainer.offsetTop,
-                left: dpadContainer.offsetLeft,
-                width: dpadContainer.offsetWidth,
-                height: dpadContainer.offsetHeight
-            };
-            const actionPos = {
-                top: actionControlsContainer.offsetTop,
-                left: actionControlsContainer.offsetLeft,
-                width: actionControlsContainer.offsetWidth,
-                height: actionControlsContainer.offsetHeight
-            };
-            
-            localStorage.setItem('dpadPos', JSON.stringify(dpadPos));
-            localStorage.setItem('actionPos', JSON.stringify(actionPos));
-            
-            closeLayoutEditor();
-        }
-        
-        function resetLayout() {
-            localStorage.removeItem('dpadPos');
-            localStorage.removeItem('actionPos');
-            applySavedLayout();
-        }
-
-        function closeLayoutEditor() {
-            isEditingLayout = false;
-            updateElementVisibility(layoutEditorOverlay, false);
-            buttonsLayout.classList.remove('layout-editor-mode');
-            updateElementVisibility(gameMenu, true);
-        }
-
-        function applySavedLayout() {
-            const savedDpadPos = JSON.parse(localStorage.getItem('dpadPos'));
-            const savedActionPos = JSON.parse(localStorage.getItem('actionPos'));
-
-            if (savedDpadPos) {
-                dpadContainer.style.top = `${savedDpadPos.top}px`;
-                dpadContainer.style.left = `${savedDpadPos.left}px`;
-                dpadContainer.style.width = `${savedDpadPos.width}px`;
-                dpadContainer.style.height = `${savedDpadPos.height}px`;
-                dpadContainer.style.transform = 'none';
-                
-                // Adjust font size based on width
-                const dpadBtnSize = savedDpadPos.width / 3.5;
-                const dpadBtnFontSize = dpadBtnSize * 0.4;
-                Array.from(dpadContainer.querySelectorAll('button')).forEach(btn => {
-                    btn.style.width = `${dpadBtnSize}px`;
-                    btn.style.height = `${dpadBtnSize}px`;
-                    btn.style.fontSize = `${dpadBtnFontSize}px`;
-                });
-
-            } else {
-                dpadContainer.style.top = defaultLayoutPositions.dpad.top;
-                dpadContainer.style.left = defaultLayoutPositions.dpad.left;
-                dpadContainer.style.width = defaultLayoutPositions.dpad.width;
-                dpadContainer.style.height = defaultLayoutPositions.dpad.height;
-                dpadContainer.style.transform = defaultLayoutPositions.dpad.transform;
-            }
-            
-            if (savedActionPos) {
-                actionControlsContainer.style.top = `${savedActionPos.top}px`;
-                actionControlsContainer.style.left = `${savedActionPos.left}px`;
-                actionControlsContainer.style.width = `${savedActionPos.width}px`;
-                actionControlsContainer.style.height = `${savedActionPos.height}px`;
-                actionControlsContainer.style.transform = 'none';
-                
-                // Adjust font size of action buttons and pause button
-                const pauseBtnSize = savedActionPos.width / 2;
-                const actionBtnTextSize = pauseBtnSize * 0.13;
-                const actionBtnIconSize = pauseBtnSize * 0.35;
-                const actionBtnContainerHeight = savedActionPos.height - pauseBtnSize - (savedActionPos.width * 0.04);
-                
-                actionButtonsLayout.style.width = `${pauseBtnSize}px`;
-                actionButtonsLayout.style.height = `${actionBtnContainerHeight}px`;
-                
-                Array.from(actionButtonsLayout.querySelectorAll('button, span')).forEach(el => {
-                    if (el.tagName === 'BUTTON') {
-                        el.style.fontSize = `${actionBtnTextSize}px`;
-                    } else if (el.tagName === 'SPAN') {
-                        el.style.fontSize = `${actionBtnIconSize}px`;
-                    }
-                });
-                
-                const pauseBtn = actionControlsContainer.querySelector('.pause-action-btn');
-                if (pauseBtn) {
-                    pauseBtn.style.width = `${pauseBtnSize}px`;
-                    pauseBtn.style.height = `${pauseBtnSize}px`;
-                    pauseBtn.style.fontSize = `${actionBtnTextSize}px`;
-                    pauseBtn.querySelector('span').style.fontSize = `${actionBtnIconSize}px`;
-                }
-
-            } else {
-                actionControlsContainer.style.top = defaultLayoutPositions.action.top;
-                actionControlsContainer.style.left = defaultLayoutPositions.action.left;
-                actionControlsContainer.style.width = defaultLayoutPositions.action.width;
-                actionControlsContainer.style.height = defaultLayoutPositions.action.height;
-                actionControlsContainer.style.transform = defaultLayoutPositions.action.transform;
-            }
-        }
-        
-        // Drag-and-drop & resize logic
-        function startDrag(e) {
-            if (!isEditingLayout) return;
-            const target = e.target.closest('.draggable');
-            if (!target) return;
-            
-            e.preventDefault();
-            
-            activeDraggable = target;
-            
-            // Check if a resize handle was clicked
-            if (e.target.classList.contains('resize-handle')) {
-                isResizing = true;
-                e.stopPropagation();
-            } else {
-                isResizing = false;
-            }
-            
-            initialMousePos = {
-                x: e.clientX || e.touches[0].clientX,
-                y: e.clientY || e.touches[0].clientY
-            };
-            
-            initialElementPos = {
-                x: activeDraggable.offsetLeft,
-                y: activeDraggable.offsetTop
-            };
-            
-            initialElementSize = {
-                width: activeDraggable.offsetWidth,
-                height: activeDraggable.offsetHeight
-            };
-            
-            activeDraggable.style.transform = 'none';
-        }
-        
-        function drag(e) {
-            if (!activeDraggable) return;
-            e.preventDefault();
-            
-            const currentMousePos = {
-                x: e.clientX || e.touches[0].clientX,
-                y: e.clientY || e.touches[0].clientY
-            };
-            
-            const dX = currentMousePos.x - initialMousePos.x;
-            const dY = currentMousePos.y - initialMousePos.y;
-            
-            if (isResizing) {
-                let newWidth = initialElementSize.width + dX;
-                let newHeight = initialElementSize.height + dY;
-                
-                // Minimum size constraint
-                const minSize = 100;
-                newWidth = Math.max(minSize, newWidth);
-                newHeight = Math.max(minSize, newHeight);
-                
-                activeDraggable.style.width = `${newWidth}px`;
-                activeDraggable.style.height = `${newHeight}px`;
-
-                // Recalculate and apply font sizes and nested element sizes
-                if (activeDraggable.id === 'dpad-container') {
-                     const dpadBtnSize = newWidth / 3.5;
-                     const dpadBtnFontSize = dpadBtnSize * 0.4;
-                     Array.from(activeDraggable.querySelectorAll('button')).forEach(btn => {
-                         btn.style.width = `${dpadBtnSize}px`;
-                         btn.style.height = `${dpadBtnSize}px`;
-                         btn.style.fontSize = `${dpadBtnFontSize}px`;
-                     });
-                } else if (activeDraggable.id === 'action-controls-container') {
-                    const pauseBtnSize = newWidth / 2;
-                    const actionBtnTextSize = pauseBtnSize * 0.13;
-                    const actionBtnIconSize = pauseBtnSize * 0.35;
-                    const actionBtnContainerHeight = newHeight - pauseBtnSize - (newWidth * 0.04);
-                    
-                    const actionButtonsLayout = activeDraggable.querySelector('#action-buttons-layout');
-                    actionButtonsLayout.style.width = `${pauseBtnSize}px`;
-                    actionButtonsLayout.style.height = `${actionBtnContainerHeight}px`;
-                    
-                    Array.from(actionButtonsLayout.querySelectorAll('button, span')).forEach(el => {
-                        if (el.tagName === 'BUTTON') {
-                            el.style.fontSize = `${actionBtnTextSize}px`;
-                        } else if (el.tagName === 'SPAN') {
-                            el.style.fontSize = `${actionBtnIconSize}px`;
-                        }
-                    });
-
-                    const pauseBtn = activeDraggable.querySelector('.pause-action-btn');
-                    if (pauseBtn) {
-                        pauseBtn.style.width = `${pauseBtnSize}px`;
-                        pauseBtn.style.height = `${pauseBtnSize}px`;
-                        pauseBtn.style.fontSize = `${actionBtnTextSize}px`;
-                        pauseBtn.querySelector('span').style.fontSize = `${actionBtnIconSize}px`;
-                    }
-                }
-
-            } else { // It's a drag
-                let newLeft = initialElementPos.x + dX;
-                let newTop = initialElementPos.y + dY;
-    
-                const parentRect = buttonsLayout.getBoundingClientRect();
-                const elementRect = activeDraggable.getBoundingClientRect();
-                
-                newLeft = Math.max(0, Math.min(newLeft, parentRect.width - elementRect.width));
-                newTop = Math.max(0, Math.min(newTop, parentRect.height - elementRect.height));
-    
-                activeDraggable.style.left = `${newLeft}px`;
-                activeDraggable.style.top = `${newTop}px`;
-            }
-        }
-        
-        function endDrag() {
-            activeDraggable = null;
-            isResizing = false;
-        }
-
-        // --- EVENT LISTENERS ---
-        window.addEventListener('resize', resizeCanvas);
-        document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
-        
-        function handleMenuButtonAction(e, controlType) {
-            e.preventDefault();
-            e.stopPropagation();
-            startGame(controlType);
-        }
-
-        document.getElementById('controls-keyboard').addEventListener('touchstart', (e) => handleMenuButtonAction(e, 'keyboard'), {passive: false});
-        document.getElementById('controls-keyboard').addEventListener('click', (e) => handleMenuButtonAction(e, 'keyboard'));
-
-        document.getElementById('controls-buttons').addEventListener('touchstart', (e) => handleMenuButtonAction(e, 'buttons'), {passive: false});
-        document.getElementById('controls-buttons').addEventListener('click', (e) => handleMenuButtonAction(e, 'buttons'));
-
-        document.getElementById('controls-swipe').addEventListener('touchstart', (e) => handleMenuButtonAction(e, 'swipe'), {passive: false});
-        document.getElementById('controls-swipe').addEventListener('click', (e) => handleMenuButtonAction(e, 'swipe'));
-
-        document.getElementById('playAgainButton').addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); startGame(lastControlScheme); }, {passive: false});
-        document.getElementById('playAgainButton').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); startGame(lastControlScheme); });
-        
-        document.getElementById('restartGameButton').addEventListener('touchstart', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            userScore = 0;
-            mcpScore = 0;
-            await saveGameState();
-            updateElementVisibility(gameOverScreen, false);
-            updateElementVisibility(gameMenu, true);
-        }, {passive: false});
-        document.getElementById('restartGameButton').addEventListener('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            userScore = 0;
-            mcpScore = 0;
-            await saveGameState();
-            updateElementVisibility(gameOverScreen, false);
-            updateElementVisibility(gameMenu, true);
-        });
-
-
-        if (pauseButton) {
-            pauseButton.addEventListener('touchstart', (e) => { e.preventDefault(); togglePause(); }, { passive: false });
-            pauseButton.addEventListener('click', togglePause);
-        }
-
-        const directionButtons = [
-            { id: 'up-btn', dir: 'up' },
-            { id: 'down-btn', dir: 'down' },
-            { id: 'left-btn', dir: 'left' },
-            { id: 'right-btn', dir: 'right' }
-        ];
-        directionButtons.forEach(btnInfo => {
-            const btn = document.getElementById(btnInfo.id);
-            if (btn) {
-                btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleDirectionButton(btnInfo.dir); }, {passive: false});
-            }
-        });
-
-        const actionButtons = [
-            { id: 'boost-btn', action: 'boost' },
-            { id: 'brake-btn', action: 'brake' }
-        ];
-        actionButtons.forEach(btnInfo => {
-            const btn = document.getElementById(btnInfo.id);
-            if (btn) {
-                btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleActionButton(btnInfo.action, true); }, {passive: false});
-                btn.addEventListener('touchend', (e) => { e.preventDefault(); handleActionButton(btnInfo.action, false); }, {passive: false});
-                btn.addEventListener('touchcancel', (e) => { e.preventDefault(); handleActionButton(btnInfo.action, false); }, {passive: false});
-            }
-        });
-        
-        // NEW: Dedicated swipe event listeners
-        swipeLayout.addEventListener('touchstart', handleSwipeStart, { passive: false });
-        swipeLayout.addEventListener('touchmove', e => e.preventDefault(), { passive: false }); // Prevent scrolling
-        swipeLayout.addEventListener('touchend', handleSwipeEnd, { passive: false });
-        swipeLayout.addEventListener('touchcancel', handleSwipeCancel, { passive: false });
-
-        // === LAYOUT EDITOR EVENT LISTENERS ===
-        openLayoutEditorBtn.addEventListener('click', openLayoutEditor);
-        openLayoutEditorBtn.addEventListener('touchstart', (e) => { e.preventDefault(); openLayoutEditor(); }, {passive: false});
-        
-        saveLayoutBtn.addEventListener('click', saveLayout);
-        saveLayoutBtn.addEventListener('touchstart', (e) => { e.preventDefault(); saveLayout(); }, {passive: false});
-        
-        resetLayoutBtn.addEventListener('click', resetLayout);
-        resetLayoutBtn.addEventListener('touchstart', (e) => { e.preventDefault(); resetLayout(); }, {passive: false});
-        
-        // Mouse and Touch listeners for dragging and resizing
-        [dpadContainer, actionControlsContainer].forEach(element => {
-            element.addEventListener('mousedown', startDrag);
-            element.addEventListener('touchstart', startDrag, { passive: false });
-        });
-        
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('touchmove', drag, { passive: false });
-        
-        document.addEventListener('mouseup', endDrag);
-        document.addEventListener('touchend', endDrag);
-        document.addEventListener('touchcancel', endDrag);
-
-        // --- INITIALIZATION ---
-        async function init() {
-            resizeCanvas();
-            displayScores();
-            await setupFirebaseAndLoadScores();
-            updateElementVisibility(gameMenu, true);
-        }
-        
-        // NEW: Service Worker registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                .then(registration => {
-                    console.log('Service Worker registered with scope:', registration.scope);
-                }).catch(error => {
-                    console.error('Service Worker registration failed:', error);
-                });
-            });
-        }
-        
-        window.onload = init;
-    </script>
-</body>
-</html>
-
+        const SWIPE_THRESHO
