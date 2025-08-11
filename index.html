@@ -53,7 +53,7 @@
             width: 100vw;
             padding: 0;
         }
-        .mobile-controls-section {
+        .controls-container {
             height: 50vh;
             width: 100%;
             display: flex;
@@ -148,7 +148,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin: 0.5rem;
-            pointer-events: auto; /* IMPORTANT FIX */
+            pointer-events: auto;
         }
         .game-button:hover {
             background-color: #00e0e0;
@@ -182,23 +182,14 @@
         }
         .mobile-controls-layout {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 0;
-            pointer-events: auto;
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        .main-controls-row {
-            display: flex;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
             width: 100%;
+            height: 100%;
             padding: 0 1rem;
-            margin-top: -190px;
+            box-sizing: border-box;
+            position: relative;
         }
         .direction-buttons-layout {
             display: grid;
@@ -206,17 +197,17 @@
                 ". up ."
                 "left . right"
                 ". down .";
-            gap: 26px;
-            width: 333px;
-            height: 333px;
+            gap: 16px;
+            width: 250px;
+            height: 250px;
             padding: 0;
             box-sizing: border-box;
             place-items: center;
         }
         .direction-buttons-layout button {
-            width: 128px;
-            height: 128px;
-            border-radius: 12px;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
             background-color: #002222;
             border: 2px solid #0ff;
             box-shadow: 0 0 8px #0ff;
@@ -226,6 +217,7 @@
             align-items: center;
             cursor: pointer;
             transition: all 0.1s ease;
+            font-size: 40px; /* NEW: Default button font size */
         }
         .direction-buttons-layout button.up { grid-area: up; }
         .direction-buttons-layout button.down { grid-area: down; }
@@ -241,17 +233,19 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: 2rem;
+            gap: 1rem;
         }
         .action-buttons-layout {
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 10px;
+            width: 120px;
+            height: 200px;
         }
         .action-btn {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 9999px;
             background-color: #002222;
             border: 2px solid #0ff;
             box-shadow: 0 0 8px #0ff;
@@ -262,10 +256,14 @@
             align-items: center;
             cursor: pointer;
             text-transform: uppercase;
-            font-size: 22px;
+            font-size: 1rem; /* NEW: Default button font size */
             font-weight: 700;
             transition: all 0.1s ease;
             line-height: 1;
+        }
+        .action-btn span {
+            font-size: 2.5rem; /* NEW: Default icon size */
+            margin-bottom: 5px;
         }
         .action-btn:active {
             background-color: #0ff;
@@ -274,8 +272,8 @@
             transform: scale(0.95);
         }
         .pause-action-btn {
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             background-color: #ff6600;
             border: 2px solid #ff6600;
@@ -287,10 +285,13 @@
             align-items: center;
             cursor: pointer;
             text-transform: uppercase;
-            font-size: 22px;
+            font-size: 1rem; /* NEW: Default button font size */
             font-weight: 700;
             transition: all 0.1s ease;
             line-height: 1;
+        }
+        .pause-action-btn span {
+            font-size: 3rem; /* NEW: Default icon size */
         }
         .pause-action-btn:active {
             background-color: #ff8c42;
@@ -298,14 +299,10 @@
             box-shadow: 0 0 15px #ff8c42;
             transform: scale(0.95);
         }
-        .action-btn span, .pause-action-btn span {
-            font-size: 55px;
-            margin-bottom: 5px;
-        }
         /* Phosphor Icons */
         .ph {
             font-family: 'phosphor';
-            font-size: 77px;
+            font-size: inherit; /* NEW: Icons inherit font size from parent button */
             line-height: 1;
         }
         #boost-meter-container {
@@ -339,7 +336,7 @@
             text-shadow: 0 0 5px rgba(0, 192, 192, 0.5);
         }
         
-        /* === NEW CSS FOR LAYOUT EDITOR === */
+        /* === LAYOUT EDITOR === */
         .layout-editor-overlay {
             position: absolute;
             top: 0;
@@ -351,47 +348,30 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 30; /* Above everything else */
+            z-index: 30;
             color: white;
             font-size: 2rem;
-            pointer-events: none; /* Crucial fix: Let events pass through to draggable elements */
+            pointer-events: none;
         }
         .layout-editor-overlay .game-button {
-            pointer-events: auto; /* Re-enable events for buttons */
+            pointer-events: auto;
         }
         .layout-editor-controls {
             position: absolute;
             top: 1rem;
             display: flex;
             gap: 1rem;
-            pointer-events: auto; /* Re-enable events for the control buttons */
+            pointer-events: auto;
         }
-        
-        /* Make controls positionable */
         .draggable {
             position: absolute;
             cursor: grab;
-            transition: none; /* Disable transitions when dragging */
-            pointer-events: auto; /* Ensure draggable elements are clickable */
+            transition: none !important;
+            pointer-events: auto;
         }
         .draggable:active {
             cursor: grabbing;
         }
-        
-        /* Initial positions for draggable controls (overridden by localStorage) */
-        .direction-buttons-layout.draggable {
-            top: calc(50% + 50px);
-            left: 2rem;
-            transform: translateY(-50%);
-        }
-        
-        .right-controls-group.draggable {
-            top: calc(50% + 50px);
-            right: 2rem;
-            transform: translateY(-50%);
-        }
-        
-        /* Highlight draggables in editor mode */
         .layout-editor-mode .draggable {
             outline: 2px dashed #00c0c0;
             background-color: rgba(0, 192, 192, 0.1);
@@ -399,6 +379,20 @@
         .layout-editor-mode .draggable:active {
             outline-color: #ffffff;
             background-color: rgba(0, 192, 192, 0.3);
+        }
+        
+        /* NEW: Resize handle styles */
+        .resize-handle {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background-color: #00c0c0;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: se-resize;
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -450,27 +444,25 @@
             </div>
         </div>
         <!-- Mobile controls section -->
-        <div id="mobile-controls-container" class="mobile-controls-section hidden">
+        <div id="controls-container" class="controls-container hidden">
             <!-- Buttons Layout -->
-            <!-- The button layouts are now positioned absolutely within this container -->
             <div id="buttons-layout" class="mobile-controls-layout hidden">
-                <!-- Main controls row for d-pad, action buttons, and pause -->
-                <!-- The d-pad container is now `draggable` -->
+                <!-- D-pad container is now `draggable` -->
                 <div id="dpad-container" class="direction-buttons-layout draggable">
                     <button id="up-btn" class="up"><i class="ph ph-caret-up"></i></button>
                     <button id="down-btn" class="down"><i class="ph ph-caret-down"></i></button>
                     <button id="left-btn" class="left"><i class="ph ph-caret-left"></i></button>
                     <button id="right-btn" class="right"><i class="ph ph-caret-right"></i></button>
+                    <div class="resize-handle"></div>
                 </div>
                 <!-- The right-side controls are now `draggable` -->
-                <div id="action-buttons-container" class="right-controls-group draggable">
-                    <!-- Action buttons layout -->
-                    <div class="action-buttons-layout">
+                <div id="action-controls-container" class="right-controls-group draggable">
+                    <div id="action-buttons-layout" class="action-buttons-layout">
                         <button class="action-btn" id="boost-btn"><span><i class="ph ph-turbo"></i></span>BOOST</button>
                         <button class="action-btn" id="brake-btn"><span><i class="ph ph-hand-palm"></i></span>BRAKE</button>
                     </div>
-                    <!-- Pause button -->
                     <button class="pause-action-btn" id="pauseButton"><span><i class="ph ph-pause-circle"></i></span>PAUSE</button>
+                    <div class="resize-handle"></div>
                 </div>
             </div>
             <!-- Swipe Layout -->
@@ -480,7 +472,7 @@
         </div>
         <!-- NEW: Layout Editor Overlay -->
         <div id="layout-editor-overlay" class="layout-editor-overlay hidden">
-            <h2>Drag and drop to customize your layout</h2>
+            <h2>Drag and drop or resize to customize your layout</h2>
             <div class="layout-editor-controls">
                 <button id="save-layout-btn" class="game-button">Save Layout</button>
                 <button id="reset-layout-btn" class="game-button">Reset Layout</button>
@@ -502,7 +494,7 @@
         // --- DOM ELEMENTS ---
         const mainGameContainer = document.getElementById('main-game-container');
         const gameDisplaySection = document.getElementById('game-display-section');
-        const mobileControlsContainer = document.getElementById('mobile-controls-container');
+        const controlsContainer = document.getElementById('controls-container');
         const buttonsLayout = document.getElementById('buttons-layout');
         const swipeLayout = document.getElementById('swipe-layout');
         const gameBoard = document.getElementById('game-board');
@@ -524,15 +516,16 @@
         const saveLayoutBtn = document.getElementById('save-layout-btn');
         const resetLayoutBtn = document.getElementById('reset-layout-btn');
         const dpadContainer = document.getElementById('dpad-container');
-        const actionButtonsContainer = document.getElementById('action-buttons-container');
+        const actionControlsContainer = document.getElementById('action-controls-container');
+        const actionButtonsLayout = document.getElementById('action-buttons-layout');
         
         // --- GAME CONSTANTS & VARIABLES ---
-        const gridSize = 10;
-        const baseTickInterval = 54;
+        const gridSize = 8; // NEW: Reduced grid size for smaller bikes
+        const baseTickInterval = 65; // NEW: Increased interval for slower game speed
         const userTrailColor = '#00c0c0';
         const mcpTrailColor = '#ff6600';
         const SWIPE_THRESHOLD = 30;
-        const BOOST_HOLD_DURATION = 250; // ms
+        const BOOST_HOLD_DURATION = 250;
         let gameLoopId;
         let isGameOver = true;
         let gamePaused = false;
@@ -547,17 +540,17 @@
         const FUEL_REGEN = 0.25;
         let isBoosting = false;
         let isBraking = false;
-        let boostHoldTimeout = null;
-        let touchStartCoordinates = { x: 0, y: 0 };
-
-        // === NEW LAYOUT EDITOR VARIABLES ===
+        
+        // === LAYOUT EDITOR VARIABLES ===
         let isEditingLayout = false;
         let activeDraggable = null;
+        let isResizing = false;
         let initialMousePos = { x: 0, y: 0 };
         let initialElementPos = { x: 0, y: 0 };
+        let initialElementSize = { width: 0, height: 0 };
         const defaultLayoutPositions = {
-            dpad: { top: 'calc(50% + 50px)', left: '2rem', transform: 'translateY(-50%)' },
-            action: { top: 'calc(50% + 50px)', right: '2rem', transform: 'translateY(-50%)' }
+            dpad: { top: 'calc(50% + 50px)', left: '2rem', width: '250px', height: '250px', transform: 'translateY(-50%)' },
+            action: { top: 'calc(50% + 50px)', right: '2rem', width: '250px', height: '250px', transform: 'translateY(-50%)' }
         };
         
         // --- UTILITY FUNCTIONS ---
@@ -642,15 +635,14 @@
             
             if (controlScheme === 'keyboard') {
                 gameDisplaySection.classList.add('full-screen-game');
-                updateElementVisibility(mobileControlsContainer, false);
+                updateElementVisibility(controlsContainer, false);
             } else {
                 gameDisplaySection.classList.remove('full-screen-game');
-                updateElementVisibility(mobileControlsContainer, true);
+                updateElementVisibility(controlsContainer, true);
                 updateElementVisibility(buttonsLayout, controlScheme === 'buttons');
                 updateElementVisibility(swipeLayout, controlScheme === 'swipe');
             }
             
-            // NEW: Apply saved layout for buttons control scheme
             if (controlScheme === 'buttons') {
                 applySavedLayout();
             }
@@ -817,7 +809,6 @@
             clearInterval(gameLoopId);
             isGameOver = true;
 
-            // Ensure the main game over message is always set
             gameOverMessage.textContent = "<<END OF LINE>>";
 
             if (winner === "user") { userScore++; winnerMessage.textContent = "USER WINS"; winnerMessage.style.color = userTrailColor; }
@@ -883,66 +874,32 @@
             if (action === 'brake') isBraking = isPressed;
         }
 
-        function handleTouchStart(e) {
-            e.preventDefault();
+        function handleSwipeStart(e) {
             if (isGameOver || gamePaused) return;
             const touch = e.touches[0];
             touchStartCoordinates = { x: touch.clientX, y: touch.clientY };
-            boostHoldTimeout = setTimeout(() => {
-                isBoosting = true;
-            }, BOOST_HOLD_DURATION);
         }
 
-        function handleTouchMove(e) {
-            e.preventDefault();
-            if (isGameOver || gamePaused || !boostHoldTimeout) return;
-            const touch = e.touches[0];
-            const dX = touch.clientX - touchStartCoordinates.x;
-            const dY = touch.clientY - touchStartCoordinates.y;
-            if (Math.sqrt(dX * dX + dY * dY) > SWIPE_THRESHOLD) {
-                clearTimeout(boostHoldTimeout);
-                boostHoldTimeout = null;
-            }
-        }
-
-        function handleTouchEnd(e) {
-            e.preventDefault();
-            if (isGameOver || gamePaused) {
-                if (boostHoldTimeout) {
-                    clearTimeout(boostHoldTimeout);
-                    boostHoldTimeout = null;
-                }
-                isBoosting = false;
-                return;
-            }
-            isBoosting = false;
-            if (boostHoldTimeout) {
-                clearTimeout(boostHoldTimeout);
-                boostHoldTimeout = null;
-            }
+        function handleSwipeEnd(e) {
+            if (isGameOver || gamePaused) return;
             const touchEnd = e.changedTouches[0];
             const dX = touchEnd.clientX - touchStartCoordinates.x;
             const dY = touchEnd.clientY - touchStartCoordinates.y;
+            
             if (Math.abs(dX) > Math.abs(dY) && Math.abs(dX) > SWIPE_THRESHOLD) {
                 handleDirectionButton(dX > 0 ? 'right' : 'left');
             } else if (Math.abs(dY) > SWIPE_THRESHOLD) {
                 handleDirectionButton(dY > 0 ? 'down' : 'up');
             }
         }
-
-        function handleTouchCancel(e) {
-            e.preventDefault();
-            isBoosting = false;
-            if (boostHoldTimeout) {
-                clearTimeout(boostHoldTimeout);
-                boostHoldTimeout = null;
-            }
+        
+        function handleSwipeCancel(e) {
+            // Nothing to do here for a simple swipe.
         }
 
-        // === NEW LAYOUT EDITOR FUNCTIONS ===
+        // === LAYOUT EDITOR FUNCTIONS ===
         function openLayoutEditor() {
             if (lastControlScheme !== 'buttons') {
-                // Using a custom message box instead of alert()
                 const editorMessageBox = document.createElement('div');
                 editorMessageBox.className = 'game-overlay';
                 editorMessageBox.innerHTML = `
@@ -957,25 +914,27 @@
             }
             isEditingLayout = true;
             updateElementVisibility(gameMenu, false);
-            updateElementVisibility(mobileControlsContainer, true);
+            updateElementVisibility(controlsContainer, true);
             updateElementVisibility(buttonsLayout, true);
             updateElementVisibility(layoutEditorOverlay, true);
 
             buttonsLayout.classList.add('layout-editor-mode');
             
-            // Re-apply saved layout to ensure the editor starts from the current positions
             applySavedLayout();
         }
 
         function saveLayout() {
-            // Correctly save positions as relative to the parent
             const dpadPos = {
                 top: dpadContainer.offsetTop,
-                left: dpadContainer.offsetLeft
+                left: dpadContainer.offsetLeft,
+                width: dpadContainer.offsetWidth,
+                height: dpadContainer.offsetHeight
             };
             const actionPos = {
-                top: actionButtonsContainer.offsetTop,
-                left: actionButtonsContainer.offsetLeft
+                top: actionControlsContainer.offsetTop,
+                left: actionControlsContainer.offsetLeft,
+                width: actionControlsContainer.offsetWidth,
+                height: actionControlsContainer.offsetHeight
             };
             
             localStorage.setItem('dpadPos', JSON.stringify(dpadPos));
@@ -987,7 +946,7 @@
         function resetLayout() {
             localStorage.removeItem('dpadPos');
             localStorage.removeItem('actionPos');
-            applySavedLayout(); // Immediately apply the default layout
+            applySavedLayout();
         }
 
         function closeLayoutEditor() {
@@ -1004,47 +963,102 @@
             if (savedDpadPos) {
                 dpadContainer.style.top = `${savedDpadPos.top}px`;
                 dpadContainer.style.left = `${savedDpadPos.left}px`;
-                dpadContainer.style.transform = 'none'; // Remove default transform
+                dpadContainer.style.width = `${savedDpadPos.width}px`;
+                dpadContainer.style.height = `${savedDpadPos.height}px`;
+                dpadContainer.style.transform = 'none';
+                
+                // Adjust font size based on width
+                const dpadBtnSize = savedDpadPos.width / 3.5;
+                const dpadBtnFontSize = dpadBtnSize * 0.4;
+                Array.from(dpadContainer.querySelectorAll('button')).forEach(btn => {
+                    btn.style.width = `${dpadBtnSize}px`;
+                    btn.style.height = `${dpadBtnSize}px`;
+                    btn.style.fontSize = `${dpadBtnFontSize}px`;
+                });
+
             } else {
                 dpadContainer.style.top = defaultLayoutPositions.dpad.top;
                 dpadContainer.style.left = defaultLayoutPositions.dpad.left;
+                dpadContainer.style.width = defaultLayoutPositions.dpad.width;
+                dpadContainer.style.height = defaultLayoutPositions.dpad.height;
                 dpadContainer.style.transform = defaultLayoutPositions.dpad.transform;
             }
             
             if (savedActionPos) {
-                actionButtonsContainer.style.top = `${savedActionPos.top}px`;
-                actionButtonsContainer.style.left = `${savedActionPos.left}px`;
-                actionButtonsContainer.style.transform = 'none';
+                actionControlsContainer.style.top = `${savedActionPos.top}px`;
+                actionControlsContainer.style.left = `${savedActionPos.left}px`;
+                actionControlsContainer.style.width = `${savedActionPos.width}px`;
+                actionControlsContainer.style.height = `${savedActionPos.height}px`;
+                actionControlsContainer.style.transform = 'none';
+                
+                // Adjust font size of action buttons and pause button
+                const pauseBtnSize = savedActionPos.width / 2;
+                const actionBtnTextSize = pauseBtnSize * 0.13;
+                const actionBtnIconSize = pauseBtnSize * 0.35;
+                const actionBtnContainerHeight = savedActionPos.height - pauseBtnSize - (savedActionPos.width * 0.04);
+                
+                actionButtonsLayout.style.width = `${pauseBtnSize}px`;
+                actionButtonsLayout.style.height = `${actionBtnContainerHeight}px`;
+                
+                Array.from(actionButtonsLayout.querySelectorAll('button, span')).forEach(el => {
+                    if (el.tagName === 'BUTTON') {
+                        el.style.fontSize = `${actionBtnTextSize}px`;
+                    } else if (el.tagName === 'SPAN') {
+                        el.style.fontSize = `${actionBtnIconSize}px`;
+                    }
+                });
+                
+                const pauseBtn = actionControlsContainer.querySelector('.pause-action-btn');
+                if (pauseBtn) {
+                    pauseBtn.style.width = `${pauseBtnSize}px`;
+                    pauseBtn.style.height = `${pauseBtnSize}px`;
+                    pauseBtn.style.fontSize = `${actionBtnTextSize}px`;
+                    pauseBtn.querySelector('span').style.fontSize = `${actionBtnIconSize}px`;
+                }
+
             } else {
-                actionButtonsContainer.style.top = defaultLayoutPositions.action.top;
-                actionButtonsContainer.style.left = defaultLayoutPositions.action.left;
-                actionButtonsContainer.style.transform = defaultLayoutPositions.action.transform;
+                actionControlsContainer.style.top = defaultLayoutPositions.action.top;
+                actionControlsContainer.style.left = defaultLayoutPositions.action.left;
+                actionControlsContainer.style.width = defaultLayoutPositions.action.width;
+                actionControlsContainer.style.height = defaultLayoutPositions.action.height;
+                actionControlsContainer.style.transform = defaultLayoutPositions.action.transform;
             }
         }
         
-        // Drag-and-drop logic
+        // Drag-and-drop & resize logic
         function startDrag(e) {
             if (!isEditingLayout) return;
-            // NEW FIX: If the target of the touch/click is a button, don't start dragging.
-            // This prevents the parent's drag listener from firing when a child button is tapped.
-            if (e.target.closest('button')) {
-                return;
-            }
+            const target = e.target.closest('.draggable');
+            if (!target) return;
+            
             e.preventDefault();
-            activeDraggable = e.currentTarget;
+            
+            activeDraggable = target;
+            
+            // Check if a resize handle was clicked
+            if (e.target.classList.contains('resize-handle')) {
+                isResizing = true;
+                e.stopPropagation();
+            } else {
+                isResizing = false;
+            }
             
             initialMousePos = {
                 x: e.clientX || e.touches[0].clientX,
                 y: e.clientY || e.touches[0].clientY
             };
             
-            // Get initial position relative to the parent, handling `calc()`
             initialElementPos = {
                 x: activeDraggable.offsetLeft,
                 y: activeDraggable.offsetTop
             };
             
-            activeDraggable.style.transform = 'none'; // Clear any default transforms
+            initialElementSize = {
+                width: activeDraggable.offsetWidth,
+                height: activeDraggable.offsetHeight
+            };
+            
+            activeDraggable.style.transform = 'none';
         }
         
         function drag(e) {
@@ -1059,22 +1073,72 @@
             const dX = currentMousePos.x - initialMousePos.x;
             const dY = currentMousePos.y - initialMousePos.y;
             
-            let newLeft = initialElementPos.x + dX;
-            let newTop = initialElementPos.y + dY;
+            if (isResizing) {
+                let newWidth = initialElementSize.width + dX;
+                let newHeight = initialElementSize.height + dY;
+                
+                // Minimum size constraint
+                const minSize = 100;
+                newWidth = Math.max(minSize, newWidth);
+                newHeight = Math.max(minSize, newHeight);
+                
+                activeDraggable.style.width = `${newWidth}px`;
+                activeDraggable.style.height = `${newHeight}px`;
 
-            // Constrain movement to the parent container
-            const parentRect = buttonsLayout.getBoundingClientRect();
-            const elementRect = activeDraggable.getBoundingClientRect();
-            
-            newLeft = Math.max(0, Math.min(newLeft, parentRect.width - elementRect.width));
-            newTop = Math.max(0, Math.min(newTop, parentRect.height - elementRect.height));
+                // Recalculate and apply font sizes and nested element sizes
+                if (activeDraggable.id === 'dpad-container') {
+                     const dpadBtnSize = newWidth / 3.5;
+                     const dpadBtnFontSize = dpadBtnSize * 0.4;
+                     Array.from(activeDraggable.querySelectorAll('button')).forEach(btn => {
+                         btn.style.width = `${dpadBtnSize}px`;
+                         btn.style.height = `${dpadBtnSize}px`;
+                         btn.style.fontSize = `${dpadBtnFontSize}px`;
+                     });
+                } else if (activeDraggable.id === 'action-controls-container') {
+                    const pauseBtnSize = newWidth / 2;
+                    const actionBtnTextSize = pauseBtnSize * 0.13;
+                    const actionBtnIconSize = pauseBtnSize * 0.35;
+                    const actionBtnContainerHeight = newHeight - pauseBtnSize - (newWidth * 0.04);
+                    
+                    const actionButtonsLayout = activeDraggable.querySelector('#action-buttons-layout');
+                    actionButtonsLayout.style.width = `${pauseBtnSize}px`;
+                    actionButtonsLayout.style.height = `${actionBtnContainerHeight}px`;
+                    
+                    Array.from(actionButtonsLayout.querySelectorAll('button, span')).forEach(el => {
+                        if (el.tagName === 'BUTTON') {
+                            el.style.fontSize = `${actionBtnTextSize}px`;
+                        } else if (el.tagName === 'SPAN') {
+                            el.style.fontSize = `${actionBtnIconSize}px`;
+                        }
+                    });
 
-            activeDraggable.style.left = `${newLeft}px`;
-            activeDraggable.style.top = `${newTop}px`;
+                    const pauseBtn = activeDraggable.querySelector('.pause-action-btn');
+                    if (pauseBtn) {
+                        pauseBtn.style.width = `${pauseBtnSize}px`;
+                        pauseBtn.style.height = `${pauseBtnSize}px`;
+                        pauseBtn.style.fontSize = `${actionBtnTextSize}px`;
+                        pauseBtn.querySelector('span').style.fontSize = `${actionBtnIconSize}px`;
+                    }
+                }
+
+            } else { // It's a drag
+                let newLeft = initialElementPos.x + dX;
+                let newTop = initialElementPos.y + dY;
+    
+                const parentRect = buttonsLayout.getBoundingClientRect();
+                const elementRect = activeDraggable.getBoundingClientRect();
+                
+                newLeft = Math.max(0, Math.min(newLeft, parentRect.width - elementRect.width));
+                newTop = Math.max(0, Math.min(newTop, parentRect.height - elementRect.height));
+    
+                activeDraggable.style.left = `${newLeft}px`;
+                activeDraggable.style.top = `${newTop}px`;
+            }
         }
         
         function endDrag() {
             activeDraggable = null;
+            isResizing = false;
         }
 
         // --- EVENT LISTENERS ---
@@ -1082,10 +1146,9 @@
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
         
-        // REVISED: Consolidated and more robust menu button listeners
         function handleMenuButtonAction(e, controlType) {
             e.preventDefault();
-            e.stopPropagation(); // Stop the event from bubbling up and being blocked
+            e.stopPropagation();
             startGame(controlType);
         }
 
@@ -1151,13 +1214,14 @@
                 btn.addEventListener('touchcancel', (e) => { e.preventDefault(); handleActionButton(btnInfo.action, false); }, {passive: false});
             }
         });
+        
+        // NEW: Dedicated swipe event listeners
+        swipeLayout.addEventListener('touchstart', handleSwipeStart, { passive: false });
+        swipeLayout.addEventListener('touchmove', e => e.preventDefault(), { passive: false }); // Prevent scrolling
+        swipeLayout.addEventListener('touchend', handleSwipeEnd, { passive: false });
+        swipeLayout.addEventListener('touchcancel', handleSwipeCancel, { passive: false });
 
-        swipeLayout.addEventListener('touchstart', handleTouchStart, { passive: false });
-        swipeLayout.addEventListener('touchmove', handleTouchMove, { passive: false });
-        swipeLayout.addEventListener('touchend', handleTouchEnd, { passive: false });
-        swipeLayout.addEventListener('touchcancel', handleTouchCancel, { passive: false });
-
-        // === NEW LAYOUT EDITOR EVENT LISTENERS ===
+        // === LAYOUT EDITOR EVENT LISTENERS ===
         openLayoutEditorBtn.addEventListener('click', openLayoutEditor);
         openLayoutEditorBtn.addEventListener('touchstart', (e) => { e.preventDefault(); openLayoutEditor(); }, {passive: false});
         
@@ -1167,13 +1231,12 @@
         resetLayoutBtn.addEventListener('click', resetLayout);
         resetLayoutBtn.addEventListener('touchstart', (e) => { e.preventDefault(); resetLayout(); }, {passive: false});
         
-        // Mouse and Touch listeners for dragging
-        [dpadContainer, actionButtonsContainer].forEach(element => {
+        // Mouse and Touch listeners for dragging and resizing
+        [dpadContainer, actionControlsContainer].forEach(element => {
             element.addEventListener('mousedown', startDrag);
             element.addEventListener('touchstart', startDrag, { passive: false });
         });
         
-        // Listeners on the document/window to handle dragging even if the cursor leaves the element
         document.addEventListener('mousemove', drag);
         document.addEventListener('touchmove', drag, { passive: false });
         
