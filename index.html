@@ -29,7 +29,6 @@
             user-select: none;
             -webkit-user-select: none;
         }
-        /* NEW: Removed 100vh here to be set by JS */
         .game-container {
             display: flex;
             flex-direction: column;
@@ -49,7 +48,7 @@
             position: relative;
         }
         .full-screen-game {
-            height: 100%; /* Changed from 100vh */
+            height: 100%;
             width: 100vw;
             padding: 0;
         }
@@ -520,8 +519,14 @@
         const actionButtonsLayout = document.getElementById('action-buttons-layout');
         
         // --- GAME CONSTANTS & VARIABLES ---
-        const gridSize = 10; // NEW: Increased grid size for larger bikes
-        const baseTickInterval = 60; // NEW: Decreased interval for slightly faster game speed
+        const gridSize = 10;
+        const baseTickInterval = 60;
         const userTrailColor = '#00c0c0';
         const mcpTrailColor = '#ff6600';
-        const SWIPE_THRESHO
+        const SWIPE_THRESHOLD = 30;
+        const BOOST_HOLD_DURATION = 250;
+        let gameLoopId;
+        let isGameOver = true;
+        let gamePaused = false;
+        let userScore = 0, mcpScore = 0;
+    
