@@ -531,7 +531,88 @@
         const boostMeterBar = document.getElementById('boost-meter-bar');
         const debugMessage = document.getElementById('debug-message');
         
-        // Layout Editor Elements
-        const layoutEditorOverlay = document.getElementById('layout-editor-overlay');
-        const openLayoutEditorBtn = document.getElementById('open-layout-editor-btn');
-        cons
+        // === LAYOUT EDITOR EVENT LISTENERS ===
+        if (openLayoutEditorBtn) openLayoutEditorBtn.addEventListener('touchstart', (e) => { e.preventDefault(); openLayoutEditor(); }, {passive: false});
+        if (saveLayoutBtn) saveLayoutBtn.addEventListener('touchstart', (e) => { e.preventDefault(); saveLayout(); }, {passive: false});
+        if (resetLayoutBtn) resetLayoutBtn.addEventListener('touchstart', (e) => { e.preventDefault(); resetLayout(); }, {passive: false});
+        
+        if (openLayoutEditorBtn) openLayoutEditorBtn.addEventListener('click', openLayoutEditor);
+        if (saveLayoutBtn) saveLayoutBtn.addEventListener('click', saveLayout);
+        if (resetLayoutBtn) resetLayoutBtn.addEventListener('click', resetLayout);
+        
+        // Mouse and Touch listeners for dragging and resizing
+        [dpadContainer, actionControlsContainer].forEach(element => {
+            if (element) {
+                element.addEventListener('mousedown', startDrag);
+                element.addEventListener('touchstart', startDrag, { passive: false });
+            }
+        });
+        
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+        document.addEventListener('touchcancel', endDrag);
+
+        // --- INITIALIZATION ---
+        async function init() {
+            writeDebugMessage("Application starting...");
+            setDynamicHeight();
+            displayScores();
+            await setupFirebaseAndLoadScores();
+
+            // Setup menu button listeners here to ensure DOM is ready
+            const keyboardBtn = document.getElementById('controls-keyboard');
+            if (keyboardBtn) {
+                keyboardBtn.addEventListener('touchstart', (e) => { e.preventDefault(); writeDebugMessage('Button tapped: controls-keyboard'); startGame('keyboard'); }, { passive: false });
+                keyboardBtn.addEventListener('click', () => { writeDebugMessage('Button clicked: controls-keyboard'); startGame('keyboard'); });
+                writeDebugMessage('Found keyboard button. Listener attached.');
+            } else { writeDebugMessage('Failed to find keyboard button.'); }
+
+            const buttonsBtn = document.getElementById('controls-buttons');
+            if (buttonsBtn) {
+                buttonsBtn.addEventListener('touchstart', (e) => { e.preventDefault(); writeDebugMessage('Button tapped: controls-buttons'); startGame('buttons'); }, { passive: false });
+                buttonsBtn.addEventListener('click', () => { writeDebugMessage('Button clicked: controls-buttons'); startGame('buttons'); });
+                writeDebugMessage('Found buttons button. Listener attached.');
+            } else { writeDebugMessage('Failed to find buttons button.'); }
+
+            const swipeBtn = document.getElementById('controls-swipe');
+            if (swipeBtn) {
+                swipeBtn.addEventListener('touchstart', (e) => { e.preventDefault(); writeDebugMessage('Button tapped: controls-swipe'); startGame('swipe'); }, { passive: false });
+                swipeBtn.addEventListener('click', () => { writeDebugMessage('Button clicked: controls-swipe'); startGame('swipe'); });
+                writeDebugMessage('Found swipe button. Listener attached.');
+            } else { writeDebugMessage('Failed to find swipe button.'); }
+            
+            const playAgainBtn = document.getElementById('playAgainButton');
+            if (playAgainBtn) {
+                 playAgainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); writeDebugMessage('Button tapped: playAgainButton'); startGame(lastControlScheme); }, {passive: false});
+                 playAgainBtn.addEventListener('click', () => { writeDebugMessage('Button clicked: playAgainButton'); startGame(lastControlScheme); });
+            }
+
+            const restartGameBtn = document.getElementById('restartGameButton');
+            if (restartGameBtn) {
+                 restartGameBtn.addEventListener('touchstart', (e) => { e.preventDefault(); writeDebugMessage('Button tapped: restartGameButton'); userScore = 0; mcpScore = 0; saveGameState(); updateElementVisibility(gameOverScreen, false); updateElementVisibility(gameMenu, true); }, {passive: false});
+                 restartGameBtn.addEventListener('click', () => { writeDebugMessage('Button clicked: restartGameButton'); userScore = 0; mcpScore = 0; saveGameState(); updateElementVisibility(gameOverScreen, false); updateElementVisibility(gameMenu, true); });
+            }
+
+            updateElementVisibility(gameMenu, true);
+            writeDebugMessage("Ready. Please select a control scheme.");
+        }
+        
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                .then(registration => {
+                    writeDebugMessage('Service Worker registered.');
+                }).catch(error => {
+                    writeDebugMessage('Service Worker registration failed: ' + error.message);
+                });
+            });
+        }
+        
+        window.onload = init;
+    </script>
+</body>
+</html>
